@@ -32,8 +32,8 @@ def download_jpgs(base_url):
                     with open(f'images/{img_name}', 'wb') as f:
                         f.write(img_data)
                         print(f'Downloaded {img_name}')
-                except requests.RequestException as e:
-                    print(f"Failed to download image {full_img_url}: {e}")
+                except FileNotFoundError:
+                    print("Failed to download image")
                     pass
                 
         # Add new links to the queue
