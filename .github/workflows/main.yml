@@ -1,28 +1,48 @@
-name: Run API Requests
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+from collections import deque
 
-on:
-  push:
-    branches:
-      - main  # Change this to your default branch if it's different
+def download_jpgs(base_url):
+    visited = set()
+    queue = deque([base_url])
+    
+    while queue:
+        url = queue.popleft()
+        if url in visited:
+            continue
+        visited.add(url)
+        
+        try:
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+        except requests.RequestException as e:
+            print(f"Failed to retrieve {url}: {e}")
+            continue
+        
+        # Download JPG images
+        for img in soup.find_all('img'):
+            img_url = img.get('src')
+            if img_url and img_url.endswith('.jpg'):
+                full_img_url = urljoin(base_url, img_url)
+                try:
+                    img_data = requests.get(full_img_url).content
+                    img_name = os.path.basename(full_img_url)
+                    with open(f'images/{img_name}', 'wb') as f:
+                        f.write(img_data)
+                        print(f'Downloaded {img_name}')
+                except requests.RequestException as e:
+                    print(f"Failed to download image {full_img_url}: {e}")
+        
+        # Add new links to the queue
+        for link in soup.find_all('a', href=True):
+            full_link = urljoin(base_url, link['href'])
+            if base_url in full_link and full_link not in visited:
+                queue.append(full_link)
 
-jobs:
-  run-api-requests:
-    runs-on: ubuntu-latest
+def main():
+    base_url = "http://www.spanishbeercoasters.es"
+    download_jpgs(base_url)
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'  # Specify the Python version you want to use
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run API requests
-      run: python getdata.py
-
+if __name__ == "__main__":
+    main()
