@@ -34,7 +34,8 @@ def download_jpgs(base_url):
                         print(f'Downloaded {img_name}')
                 except requests.RequestException as e:
                     print(f"Failed to download image {full_img_url}: {e}")
-        
+                    continue
+                
         # Add new links to the queue
         for link in soup.find_all('a', href=True):
             full_link = urljoin(base_url, link['href'])
