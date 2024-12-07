@@ -34,7 +34,7 @@ def download_jpgs(base_url):
                         print(f'Downloaded {img_name}')
                 except FileNotFoundError:
                     print("Failed to download image")
-                    pass
+                    continue
                 
         # Add new links to the queue
         for link in soup.find_all('a', href=True):
